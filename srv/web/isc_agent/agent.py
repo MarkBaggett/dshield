@@ -250,7 +250,7 @@ class Agent:
             self.logger.debug(f"ip42long({ip}) returned {result}")
             return result
         except socket.error:
-            self.logger.error(f" - Invalid IP address: '{ip}'")
+            self.logger.warning(f" - Invalid IP address: '{ip}'")
             self.logger.debug(f"ip42long({ip}) returned -1 due to invalid IP")
             return -1
 
@@ -275,7 +275,7 @@ class Agent:
             self.logger.debug(f"long2ip4({ip}) returned {result}")
             return result
         except Exception as e:
-            self.logger.error(f" - Error converting long to IP: {ip}, {e}")
+            self.logger.warning(f" - Error converting long to IP: {ip}, {e}")
             self.logger.debug(f"long2ip4({ip}) returned '127.0.0.1' due to exception")
             return '127.0.0.1'
 
