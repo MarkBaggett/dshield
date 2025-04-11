@@ -33,6 +33,10 @@ class HoneypotRequestHandler(BaseHTTPRequestHandler):
         self.logger = logging.getLogger(self.__class__.__name__)
         super().__init__(*args,**kwargs)
     
+    def log_message(self, format, *args):
+        # Override to suppress default logging
+        return  # no-op
+
     def send_response(self, code, message=None):
         """ This overrides the normal send_response which always includes a Server and Date Header."""
         """ Now it will send customized_server_string if it is set by .responder()"""
@@ -221,25 +225,28 @@ def reload_handler(signum, frame):
 
 #Main body of program
 if __name__ == "__main__":
-    formatter = logging.Formatter('%(asctime)s - %(threadName)s - %(name)s - %(levelname)s - %(message)s')
 
+    #Configure syslog or file logs for windows
     if platform.system() == "Windows":
         # File handler
         fh = logging.handlers.WatchedFileHandler("honeypot.log")
-        fh.setLevel(logging.INFO)
-        fh.setFormatter(formatter)  
-        logger.addHandler(fh)
-    else:
-        # Syslog handler
-        fh = logging.handlers.SysLogHandler(address='/dev/log', facility=logging.handlers.SysLogHandler.LOG_USER)
-        fh.setLevel(logging.INFO)  # Set the desired level for syslog
+        formatter = logging.Formatter('%(asctime)s - %(threadName)s - %(name)s - %(levelname)s - %(message)s')
+    elif platform.system() == "darwin":
+        #Mac Syslog
+        fh =  logging.handlers.SysLogHandler(address='/var/run/syslog', facility=logging.handlers.SysLogHandler.LOG_USER)
         fh.setFormatter(logging.Formatter('HONEYPOT - %(threadName)s - %(name)s - %(levelname)s - %(message)s'))
-        logger.addHandler(fh)
+    else:
+        # Linux Syslog handler
+        fh = logging.handlers.SysLogHandler(address='/dev/log', facility=logging.handlers.SysLogHandler.LOG_USER)
+        fh.setFormatter(logging.Formatter('HONEYPOT - %(threadName)s - %(name)s - %(levelname)s - %(message)s')) 
+    fh.setLevel(logging.INFO)  # Set the desired level for syslog
+    logger.addHandler(fh)
 
     # Stream handler
     sh = logging.StreamHandler()
     sh.setLevel(logging.ERROR)
     sh.setFormatter(logging.Formatter('%(message)s'))
+    sh.setFormatter(logging.Formatter('%(asctime)s - %(threadName)s - %(name)s - %(levelname)s - %(message)s'))
     logger.addHandler(sh)
 
     # Parse command-line arguments for config file
